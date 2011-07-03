@@ -1,0 +1,338 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E23160BE13BFCE84002F33FC /* WebAppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23160BD13BFCE84002F33FC /* WebAppKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		E23160C513BFCEAD002F33FC /* TFWebSocketConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = E23160C013BFCEAD002F33FC /* TFWebSocketConnection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E23160C613BFCEAD002F33FC /* TFWebSocketConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = E23160C113BFCEAD002F33FC /* TFWebSocketConnection.m */; };
+		E23160C713BFCEAD002F33FC /* TFWebSocketHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = E23160C213BFCEAD002F33FC /* TFWebSocketHandler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E23160C813BFCEAD002F33FC /* TFWebSocketHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E23160C313BFCEAD002F33FC /* TFWebSocketHandler.m */; };
+		E23160C913BFCEAD002F33FC /* TFWebSocketPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = E23160C413BFCEAD002F33FC /* TFWebSocketPrivate.h */; };
+		E23160CC13BFCF6A002F33FC /* TFWebSocketConnectionV08.h in Headers */ = {isa = PBXBuildFile; fileRef = E23160CA13BFCF6A002F33FC /* TFWebSocketConnectionV08.h */; };
+		E23160CD13BFCF6A002F33FC /* TFWebSocketConnectionV08.m in Sources */ = {isa = PBXBuildFile; fileRef = E23160CB13BFCF6A002F33FC /* TFWebSocketConnectionV08.m */; };
+		E23160D013BFCF6F002F33FC /* TFWebSocketConnectionV00.h in Headers */ = {isa = PBXBuildFile; fileRef = E23160CE13BFCF6F002F33FC /* TFWebSocketConnectionV00.h */; };
+		E23160D113BFCF6F002F33FC /* TFWebSocketConnectionV00.m in Sources */ = {isa = PBXBuildFile; fileRef = E23160CF13BFCF6F002F33FC /* TFWebSocketConnectionV00.m */; };
+		E23160E213BFD028002F33FC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23160E113BFD028002F33FC /* Foundation.framework */; };
+		E23160FB13BFD19D002F33FC /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E23160FA13BFD19D002F33FC /* libcrypto.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		32DBCF5E0370ADEE00C91783 /* TFWebSocketHandler_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketHandler_Prefix.pch; sourceTree = "<group>"; };
+		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8DC2EF5B0486A6940098B216 /* TFWebSocketHandler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TFWebSocketHandler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		E23160BD13BFCE84002F33FC /* WebAppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebAppKit.framework; path = "/Users/tom/Desktop/WAK/WebAppKit Framework/build/Debug/WebAppKit.framework"; sourceTree = "<absolute>"; };
+		E23160C013BFCEAD002F33FC /* TFWebSocketConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketConnection.h; sourceTree = "<group>"; };
+		E23160C113BFCEAD002F33FC /* TFWebSocketConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TFWebSocketConnection.m; sourceTree = "<group>"; };
+		E23160C213BFCEAD002F33FC /* TFWebSocketHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketHandler.h; sourceTree = "<group>"; };
+		E23160C313BFCEAD002F33FC /* TFWebSocketHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TFWebSocketHandler.m; sourceTree = "<group>"; };
+		E23160C413BFCEAD002F33FC /* TFWebSocketPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketPrivate.h; sourceTree = "<group>"; };
+		E23160CA13BFCF6A002F33FC /* TFWebSocketConnectionV08.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketConnectionV08.h; sourceTree = "<group>"; };
+		E23160CB13BFCF6A002F33FC /* TFWebSocketConnectionV08.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TFWebSocketConnectionV08.m; sourceTree = "<group>"; };
+		E23160CE13BFCF6F002F33FC /* TFWebSocketConnectionV00.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TFWebSocketConnectionV00.h; sourceTree = "<group>"; };
+		E23160CF13BFCF6F002F33FC /* TFWebSocketConnectionV00.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TFWebSocketConnectionV00.m; sourceTree = "<group>"; };
+		E23160E113BFD028002F33FC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		E23160FA13BFD19D002F33FC /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DC2EF560486A6940098B216 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23160BE13BFCE84002F33FC /* WebAppKit.framework in Frameworks */,
+				E23160E213BFD028002F33FC /* Foundation.framework in Frameworks */,
+				E23160FB13BFD19D002F33FC /* libcrypto.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DFFF38A50411DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8DC2EF5B0486A6940098B216 /* TFWebSocketHandler.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* TFWebSocketHandler */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77AEFE84172EC02AAC07 /* Classes */,
+				32C88DFF0371C24200C91783 /* Other Sources */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				034768DFFF38A50411DB9C8B /* Products */,
+			);
+			name = TFWebSocketHandler;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */,
+				1058C7B2FEA5585E11CA2CBB /* Other Frameworks */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8DC2EF5A0486A6940098B216 /* Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77AEFE84172EC02AAC07 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				E23160C213BFCEAD002F33FC /* TFWebSocketHandler.h */,
+				E23160C313BFCEAD002F33FC /* TFWebSocketHandler.m */,
+				E23160C013BFCEAD002F33FC /* TFWebSocketConnection.h */,
+				E23160C113BFCEAD002F33FC /* TFWebSocketConnection.m */,
+				E23160C413BFCEAD002F33FC /* TFWebSocketPrivate.h */,
+				E23160D213BFCF73002F33FC /* Connections */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E23160FA13BFD19D002F33FC /* libcrypto.dylib */,
+				E23160BD13BFCE84002F33FC /* WebAppKit.framework */,
+				E23160E113BFD028002F33FC /* Foundation.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7B2FEA5585E11CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0867D6A5FE840307C02AAC07 /* AppKit.framework */,
+				D2F7E79907B2D74100F64583 /* CoreData.framework */,
+				0867D69BFE84028FC02AAC07 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		32C88DFF0371C24200C91783 /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				32DBCF5E0370ADEE00C91783 /* TFWebSocketHandler_Prefix.pch */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		E23160D213BFCF73002F33FC /* Connections */ = {
+			isa = PBXGroup;
+			children = (
+				E23160CE13BFCF6F002F33FC /* TFWebSocketConnectionV00.h */,
+				E23160CF13BFCF6F002F33FC /* TFWebSocketConnectionV00.m */,
+				E23160CA13BFCF6A002F33FC /* TFWebSocketConnectionV08.h */,
+				E23160CB13BFCF6A002F33FC /* TFWebSocketConnectionV08.m */,
+			);
+			name = Connections;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8DC2EF500486A6940098B216 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23160C513BFCEAD002F33FC /* TFWebSocketConnection.h in Headers */,
+				E23160C713BFCEAD002F33FC /* TFWebSocketHandler.h in Headers */,
+				E23160C913BFCEAD002F33FC /* TFWebSocketPrivate.h in Headers */,
+				E23160CC13BFCF6A002F33FC /* TFWebSocketConnectionV08.h in Headers */,
+				E23160D013BFCF6F002F33FC /* TFWebSocketConnectionV00.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8DC2EF4F0486A6940098B216 /* TFWebSocketHandler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "TFWebSocketHandler" */;
+			buildPhases = (
+				8DC2EF500486A6940098B216 /* Headers */,
+				8DC2EF520486A6940098B216 /* Resources */,
+				8DC2EF540486A6940098B216 /* Sources */,
+				8DC2EF560486A6940098B216 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TFWebSocketHandler;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = TFWebSocketHandler;
+			productReference = 8DC2EF5B0486A6940098B216 /* TFWebSocketHandler.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "TFWebSocketHandler" */;
+			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 0867D691FE84028FC02AAC07 /* TFWebSocketHandler */;
+			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8DC2EF4F0486A6940098B216 /* TFWebSocketHandler */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8DC2EF520486A6940098B216 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DC2EF540486A6940098B216 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23160C613BFCEAD002F33FC /* TFWebSocketConnection.m in Sources */,
+				E23160C813BFCEAD002F33FC /* TFWebSocketHandler.m in Sources */,
+				E23160CD13BFCF6A002F33FC /* TFWebSocketConnectionV08.m in Sources */,
+				E23160D113BFCF6F002F33FC /* TFWebSocketConnectionV00.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91AE08733DA50010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../Desktop/WAK/WebAppKit Framework/build/Debug\"",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TFWebSocketHandler_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@loader_path/../Frameworks";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
+				PRODUCT_NAME = TFWebSocketHandler;
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		1DEB91AF08733DA50010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../Desktop/WAK/WebAppKit Framework/build/Debug\"",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TFWebSocketHandler_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@loader_path/../Frameworks";
+				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
+				PRODUCT_NAME = TFWebSocketHandler;
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		1DEB91B208733DA50010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_GC = required;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		1DEB91B308733DA50010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_GC = required;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "TFWebSocketHandler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91AE08733DA50010E9CD /* Debug */,
+				1DEB91AF08733DA50010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "TFWebSocketHandler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91B208733DA50010E9CD /* Debug */,
+				1DEB91B308733DA50010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

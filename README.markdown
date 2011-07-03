@@ -1,0 +1,7 @@
+TFWebSocketHandler is a blocks-based WebSocket server framework for WebAppKit. The `TFWebSocketHandler` class is a subclass of `WARequestHandler`, so create one and add it to your application with `addRequestHandler:`. The `connectionHandler` block is called when a client connects. You can then use the `TFWebSocketConnection` object to communicate with the client.
+
+If you are deploying your web app with reverse proxying (and you probably should), you may want to start a separate server (and `WAApplication` object) to run WebSocket on a separate port. The reason is that most reverse proxying servers deal with HTTP on a pure request/repsonse basis and don't work properly with WebSocket traffic.
+
+TFWebSocketHandler supports both the old-style draft 76/00 protocol (`draft-ietf-hybi-thewebsocketprotocol-00`) and the newer masked 07/08 protocol (`draft-ietf-hybi-thewebsocketprotocol-09`). Thus, it works with existing browser implementations (Safari 5, iOS 4.2, Chrome 4) and upcoming ones. Firefox Aurora 6.0a2 has an implementation of '07.
+
+The protocol version to use is detected automatically, so you don't have to do anything special to support both. Do keep in mind that '00 doesn't support some newer features like binary data messages and ping/pong.
