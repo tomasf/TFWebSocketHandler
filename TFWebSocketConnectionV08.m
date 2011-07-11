@@ -22,6 +22,8 @@ NSString *const TFWebSocketConnectionV8HandshakeGUID = @"258EAFA5-E914-47DA-95CA
 - (void)processFrameWithPayload:(NSData*)data;
 - (void)pongWithPayload:(NSData*)payload;
 - (void)closeAndNotifyForCode:(TFWebSocketCloseCode)code;
+- (void)fail;
+- (BOOL)opcodeIsKnown:(TFWebSocketOpcode)opcode;
 @end
 
 
@@ -68,6 +70,12 @@ enum TFWebSocketConnectionV08ReadTags {
 		NSMutableData *header = [partialFrameHeader mutableCopy];
 		[header appendData:data];
 		incomingFrameHeader = [self frameHeaderFromData:header];
+		
+		if(![self opcodeIsKnown:incomingFrameHeader.opcode]) {
+			[self fail];
+			return;
+		}
+		
 		if(incomingFrameHeader.payloadLength) {
 			if(incomingFrameHeader.payloadLength > TFWebSocketMaxFramePayloadSize) {
 				[self closeAndNotifyForCode:TFWebSocketCloseCodeFrameTooLarge];
@@ -176,6 +184,9 @@ enum TFWebSocketConnectionV08ReadTags {
 	if(closeHandler) closeHandler(code, nil);
 }
 
+- (void)fail {
+	[self closeAndNotifyForCode:TFWebSocketCloseCodeProtocolError];
+}
 
 
 #pragma Framing and masking
@@ -190,6 +201,14 @@ enum TFWebSocketConnectionV08ReadTags {
 	if(firstLength == 126) headerLength += 2; // +16-bit length
 	else if(firstLength == 127) headerLength += 8; // +64-bit length
 	return headerLength;
+}
+
+
+- (BOOL)opcodeIsKnown:(TFWebSocketOpcode)opcode {
+	TFWebSocketOpcode knownCodes[] = {TFWebSocketOpcodeContinuation, TFWebSocketOpcodeText, TFWebSocketOpcodeBinary,TFWebSocketOpcodeClose, TFWebSocketOpcodePing, TFWebSocketOpcodePong};
+	for(int i=0; i<sizeof(knownCodes)/sizeof(knownCodes[0]); i++)
+		if(opcode == knownCodes[i]) return YES;
+	return NO;
 }
 
 
@@ -314,7 +333,10 @@ enum TFWebSocketConnectionV08ReadTags {
 		
 		if(messageType == TFWebSocketOpcodeText) {
 			NSString *text = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
-			if(!text) return; // Invalid UTF-8. Explicitly undefined in spec.
+			if(!text) { // Invalid UTF-8. Explicitly undefined in 08/09. Failing according to 10 [8.1]
+				[self fail];
+				return;
+			}
 			if(textMessageHandler) textMessageHandler(text);
 			
 		}else if(messageType == TFWebSocketOpcodeBinary) {

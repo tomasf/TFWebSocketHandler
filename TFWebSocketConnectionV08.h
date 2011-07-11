@@ -34,7 +34,7 @@ typedef struct {
 } TFWebSocketFrameHeader;
 
 
-// draft-ietf-hybi-thewebsocketprotocol-09
+// draft-ietf-hybi-thewebsocketprotocol-10
 @interface TFWebSocketConnectionV08 : TFWebSocketConnection <GCDAsyncSocketDelegate> {
 	TFWebSocketOpcode messageType;
 	NSData *partialFrameHeader;
