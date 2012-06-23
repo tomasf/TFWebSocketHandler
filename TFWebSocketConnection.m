@@ -8,15 +8,27 @@
 
 #import "TFWebSocketConnection.h"
 #import "TFWebSocketPrivate.h"
-
+#import "GCDAsyncSocket.h"
 
 const NSUInteger TFWebSocketMaxFramePayloadSize = 100000;
 const NSUInteger TFWebSocketMaxMessageBodySize = 300000;
 
+@interface TFWebSocketConnection ()
+@property(copy, readwrite) NSString *subprotocol;
+@end
+
+
 
 @implementation TFWebSocketConnection
-@synthesize subprotocol;
-@synthesize textMessageHandler, dataMessageHandler, closeHandler, pongHandler;
+@synthesize subprotocol=_subprotocol;
+@synthesize textMessageHandler=_textMessageHandler;
+@synthesize dataMessageHandler=_dataMessageHandler;
+@synthesize closeHandler=_closeHandler;
+@synthesize pongHandler=_pongHandler;
+@synthesize request=_request;
+@synthesize response=_response;
+@synthesize socket=_socket;
+@synthesize handshakeHandler=_handshakeHandler;
 
 
 + (NSArray*)valuesInHTTPTokenListString:(NSString*)string {
@@ -35,13 +47,13 @@ const NSUInteger TFWebSocketMaxMessageBodySize = 300000;
 	return YES;
 }
 
-- (id)initWithRequest:(WARequest*)req response:(WAResponse*)resp socket:(GCDAsyncSocket*)sock {
+- (id)initWithRequest:(WARequest*)request response:(WAResponse*)response socket:(GCDAsyncSocket*)socket {
 	if(!(self = [super init])) return nil;
 	
-	request = req;
-	response = resp;
-	socket = sock;
-	[socket setDelegate:self];
+	self.request = request;
+	self.response = response;
+	self.socket = socket;
+	[self.socket setDelegate:self];
 	
 	return self;
 }
@@ -56,6 +68,8 @@ const NSUInteger TFWebSocketMaxMessageBodySize = 300000;
 }
 
 - (NSString*)preferredSubprotocolAmong:(NSSet*)serverProtocols {
+	if([[self clientSubprotocols] count] == 0) return nil;
+	
 	for(NSString *protocol in [self clientSubprotocols]) {
 		if([serverProtocols containsObject:protocol]) return protocol;
 	}
@@ -64,7 +78,7 @@ const NSUInteger TFWebSocketMaxMessageBodySize = 300000;
 
 - (void)startWithAvailableSubprotocols:(NSSet*)serverProtocols {
 	serverProtocols = [serverProtocols valueForKey:@"lowercaseString"];
-	subprotocol = [[self preferredSubprotocolAmong:serverProtocols] copy];
+	self.subprotocol = [self preferredSubprotocolAmong:serverProtocols];
 }
 
 - (BOOL)supportsPing {
@@ -91,10 +105,3 @@ const NSUInteger TFWebSocketMaxMessageBodySize = 300000;
 - (void)closeWithCode:(TFWebSocketCloseCode)code reason:(NSString*)reason {};
 
 @end
-
-
-
-
-
-
-

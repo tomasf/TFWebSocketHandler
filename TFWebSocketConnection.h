@@ -15,28 +15,19 @@ enum {
 	TFWebSocketCloseCodeGoingAway = 1001,
 	TFWebSocketCloseCodeProtocolError = 1002,
 	TFWebSocketCloseCodeUnsupportedData = 1003,
-	TFWebSocketCloseCodeFrameTooLarge = 1004,
-	TFWebSocketCloseCodeNoStatusReceived = 1005,
-	TFWebSocketCloseCodeAbnormal = 1006,
+	TFWebSocketCloseCodeInvalidData = 1007,
+	TFWebSocketCloseCodePolicyViolation = 1008,
+	TFWebSocketCloseCodeMessageTooBig = 1009,
+	TFWebSocketCloseCodeUnsuitableExtension = 1010,
+	TFWebSocketCloseCodeUnexpectedCondition = 1011,
 };
 
 typedef uint16_t TFWebSocketCloseCode;
 
-@interface TFWebSocketConnection : NSObject {
-	WARequest *request;
-	WAResponse *response;
-	GCDAsyncSocket *socket;
-	
-	NSString *subprotocol;
-	
-	void(^textMessageHandler)(NSString *text);
-	void(^dataMessageHandler)(NSData *data);
-	void(^closeHandler)(TFWebSocketCloseCode code, NSString *reason);
-	void(^pongHandler)();
-}
+@interface TFWebSocketConnection : NSObject
 
 @property(readonly) NSString *origin;
-@property(readonly) NSString *subprotocol;
+@property(readonly, copy) NSString *subprotocol;
 
 @property(readonly) BOOL supportsPing;
 @property(readonly) BOOL supportsDataMessages;
@@ -46,6 +37,10 @@ typedef uint16_t TFWebSocketCloseCode;
 @property(copy) void(^closeHandler)(TFWebSocketCloseCode code, NSString *reason);
 @property(copy) void(^pongHandler)();
 
+@property(strong) WARequest *request;
+@property(strong) WAResponse *response;
+@property(strong) GCDAsyncSocket *socket;
+
 - (void)close;
 - (void)closeWithCode:(TFWebSocketCloseCode)code;
 - (void)closeWithCode:(TFWebSocketCloseCode)code reason:(NSString*)reason;
@@ -53,5 +48,7 @@ typedef uint16_t TFWebSocketCloseCode;
 - (void)sendTextMessage:(NSString*)text;
 - (void)sendDataMessage:(NSData*)data;
 - (void)ping;
+
+@property(copy) void(^handshakeHandler)(BOOL success);
 
 @end

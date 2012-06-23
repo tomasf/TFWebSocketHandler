@@ -19,7 +19,8 @@
 
 @interface WAResponse (TFWSPrivate)
 - (void)sendHeader;
-- (id)initWithRequest:(WARequest*)req socket:(GCDAsyncSocket*)sock completionHandler:(void(^)(BOOL keepAlive))handler;
+- (id)initWithRequest:(WARequest*)req socket:(GCDAsyncSocket*)sock;
+@property(copy) void(^completionHandler)(BOOL keepAlive);
 @end
 
 

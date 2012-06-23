@@ -9,8 +9,5 @@
 #import "TFWebSocketConnection.h"
 
 // draft-ietf-hybi-thewebsocketprotocol-00
-@interface TFWebSocketConnectionV00 : TFWebSocketConnection <GCDAsyncSocketDelegate> {
-	BOOL closing;
-}
-
+@interface TFWebSocketConnectionV00 : TFWebSocketConnection
 @end

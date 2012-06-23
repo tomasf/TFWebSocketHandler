@@ -8,22 +8,19 @@
 
 #import "TFWebSocketConnectionV08.h"
 #import "TFWebSocketPrivate.h"
-#import <openssl/sha.h>
+#import <CommonCrypto/CommonDigest.h>
+#import "GCDAsyncSocket.h"
 
 
 NSString *const TFWebSocketConnectionV8HandshakeGUID = @"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 
-@interface TFWebSocketConnectionV08 ()
-- (uint8)frameHeaderLengthFromFirstTwoBytes:(uint8_t*)buffer;
-- (TFWebSocketFrameHeader)frameHeaderFromData:(NSData*)data;
-- (NSData*)dataFromFrameHeader:(TFWebSocketFrameHeader)frame;
-- (void)readNewFrame;
-- (void)processFrameWithPayload:(NSData*)data;
-- (void)pongWithPayload:(NSData*)payload;
-- (void)closeAndNotifyForCode:(TFWebSocketCloseCode)code;
-- (void)fail;
-- (BOOL)opcodeIsKnown:(TFWebSocketOpcode)opcode;
+@interface TFWebSocketConnectionV08 () <GCDAsyncSocketDelegate>
+@property TFWebSocketOpcode messageType;
+@property(strong) NSData *partialFrameHeader;
+@property TFWebSocketFrameHeader incomingFrameHeader;
+@property(strong) NSMutableData *bufferedPayloadData;
+@property BOOL closing;
 @end
 
 
@@ -36,17 +33,22 @@ enum TFWebSocketConnectionV08ReadTags {
 
 
 @implementation TFWebSocketConnectionV08
+@synthesize messageType=_messageType;
+@synthesize partialFrameHeader=_partialFrameHeader;
+@synthesize incomingFrameHeader=_incomingFrameHeader;
+@synthesize bufferedPayloadData=_bufferedPayloadData;
+@synthesize closing=_closing;
 
 
 - (id)initWithRequest:(WARequest*)req response:(WAResponse*)resp socket:(GCDAsyncSocket*)sock {
 	if(!(self = [super initWithRequest:req response:resp socket:sock])) return nil;
-	bufferedPayloadData = [NSMutableData data];
+	self.bufferedPayloadData = [NSMutableData data];
 	return self;
 }
 
 
 - (NSString*)origin {
-	return [request valueForHeaderField:@"Sec-WebSocket-Origin"];
+	return [self.request valueForHeaderField:@"Sec-WebSocket-Origin"];
 }
 
 
@@ -55,33 +57,33 @@ enum TFWebSocketConnectionV08ReadTags {
 
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
-	if(!closing && closeHandler)
-		closeHandler(TFWebSocketCloseCodeUnspecified, nil);
+	if(!self.closing && self.closeHandler)
+		self.closeHandler(TFWebSocketCloseCodeUnspecified, nil);
 }
 
 
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
 	if(tag == TFWebSocketTagFrameHeaderStart) { // first two bytes of frame
 		uint8_t frameHeaderLength = [self frameHeaderLengthFromFirstTwoBytes:(uint8_t*)[data bytes]];
-		partialFrameHeader = [data copy];
-		[socket readDataToLength:frameHeaderLength-2 withTimeout:-1 tag:TFWebSocketTagFrameHeaderRest];
+		self.partialFrameHeader = [data copy];
+		[self.socket readDataToLength:frameHeaderLength-2 withTimeout:-1 tag:TFWebSocketTagFrameHeaderRest];
 	
 	}else if(tag == TFWebSocketTagFrameHeaderRest) { // rest of frame header
-		NSMutableData *header = [partialFrameHeader mutableCopy];
+		NSMutableData *header = [self.partialFrameHeader mutableCopy];
 		[header appendData:data];
-		incomingFrameHeader = [self frameHeaderFromData:header];
+		self.incomingFrameHeader = [self frameHeaderFromData:header];
 		
-		if(![self opcodeIsKnown:incomingFrameHeader.opcode]) {
+		if(![self opcodeIsKnown:self.incomingFrameHeader.opcode]) {
 			[self fail];
 			return;
 		}
 		
-		if(incomingFrameHeader.payloadLength) {
-			if(incomingFrameHeader.payloadLength > TFWebSocketMaxFramePayloadSize) {
-				[self closeAndNotifyForCode:TFWebSocketCloseCodeFrameTooLarge];
+		if(self.incomingFrameHeader.payloadLength) {
+			if(self.incomingFrameHeader.payloadLength > TFWebSocketMaxFramePayloadSize) {
+				[self closeAndNotifyForCode:TFWebSocketCloseCodeMessageTooBig];
 				return;
 			}
-			[socket readDataToLength:incomingFrameHeader.payloadLength withTimeout:-1 tag:TFWebSocketTagFramePayload];
+			[self.socket readDataToLength:self.incomingFrameHeader.payloadLength withTimeout:-1 tag:TFWebSocketTagFramePayload];
 		}else{
 			[self processFrameWithPayload:nil];
 			[self readNewFrame];
@@ -106,35 +108,36 @@ enum TFWebSocketConnectionV08ReadTags {
 
 
 - (NSArray*)clientSubprotocols {
-	return [[self class] valuesInHTTPTokenListString:[request valueForHeaderField:@"Sec-WebSocket-Protocol"]];
+	return [[self class] valuesInHTTPTokenListString:[self.request valueForHeaderField:@"Sec-WebSocket-Protocol"]];
 }
 
 
 - (void)startWithAvailableSubprotocols:(NSSet*)serverProtocols {
 	[super startWithAvailableSubprotocols:serverProtocols];
 	
-	NSString *key = [[request valueForHeaderField:@"Sec-WebSocket-Key"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	NSString *key = [[self.request valueForHeaderField:@"Sec-WebSocket-Key"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 	NSString *concat = [key stringByAppendingString:TFWebSocketConnectionV8HandshakeGUID];
 	
-	NSMutableData *hash = [NSMutableData dataWithLength:SHA_DIGEST_LENGTH];
-	SHA1((uint8_t*)[concat UTF8String], [concat lengthOfBytesUsingEncoding:NSUTF8StringEncoding], [hash mutableBytes]);
+	NSMutableData *hash = [NSMutableData dataWithLength:CC_SHA1_DIGEST_LENGTH];
+	CC_SHA1((uint8_t*)[concat UTF8String], [concat lengthOfBytesUsingEncoding:NSUTF8StringEncoding], [hash mutableBytes]);
 	NSString *acceptString = [hash base64String];
 	
-	response.statusCode = 101;
-	response.hasBody = NO;
-	[response setValue:@"websocket" forHeaderField:@"Upgrade"];
-	[response setValue:@"Upgrade" forHeaderField:@"Connection"];
-	[response setValue:acceptString forHeaderField:@"Sec-WebSocket-Accept"];
-	[response setValue:self.subprotocol forHeaderField:@"Sec-WebSocket-Protocol"];
-	[response sendHeader];
+	self.response.statusCode = 101;
+	self.response.hasBody = NO;
+	[self.response setValue:@"websocket" forHeaderField:@"Upgrade"];
+	[self.response setValue:@"Upgrade" forHeaderField:@"Connection"];
+	[self.response setValue:acceptString forHeaderField:@"Sec-WebSocket-Accept"];
+	if(self.subprotocol) [self.response setValue:self.subprotocol forHeaderField:@"Sec-WebSocket-Protocol"];
+	[self.response sendHeader];
 	
 	[self readNewFrame];
+	if(self.handshakeHandler) self.handshakeHandler(YES);
 }
 
 
 - (void)peerClosedWithPayload:(NSData*)payload {
-	if(closing) {
-		[socket disconnect];
+	if(self.closing) {
+		[self.socket disconnect];
 	}else{
 		TFWebSocketCloseCode code = TFWebSocketCloseCodeUnspecified;
 		NSString *reason = nil;
@@ -147,8 +150,8 @@ enum TFWebSocketConnectionV08ReadTags {
 		}
 		
 		[self closeWithCode:TFWebSocketCloseCodeNormal];
-		[socket disconnectAfterWriting];
-		if(closeHandler) closeHandler(code, reason);
+		[self.socket disconnectAfterWriting];
+		if(self.closeHandler) self.closeHandler(code, reason);
 	}
 }
 
@@ -172,16 +175,16 @@ enum TFWebSocketConnectionV08ReadTags {
 	};
 	
 	NSData *headerData = [self dataFromFrameHeader:header];
-	[socket writeData:headerData withTimeout:-1 tag:0];
+	[self.socket writeData:headerData withTimeout:-1 tag:0];
 	if([payload length])
-		[socket writeData:payload withTimeout:-1 tag:0];
-	closing = YES;
+		[self.socket writeData:payload withTimeout:-1 tag:0];
+	self.closing = YES;
 }
 
 
 - (void)closeAndNotifyForCode:(TFWebSocketCloseCode)code {
 	[self closeWithCode:code];
-	if(closeHandler) closeHandler(code, nil);
+	if(self.closeHandler) self.closeHandler(code, nil);
 }
 
 - (void)fail {
@@ -296,51 +299,51 @@ enum TFWebSocketConnectionV08ReadTags {
 
 
 - (void)readNewFrame {
-	[socket readDataToLength:2 withTimeout:-1 tag:TFWebSocketTagFrameHeaderStart];
+	[self.socket readDataToLength:2 withTimeout:-1 tag:TFWebSocketTagFrameHeaderStart];
 }
 
 
 - (void)processFrameWithPayload:(NSData*)data {
-	if(incomingFrameHeader.masked)
-		data = [[self class] dataByApplyingMask:incomingFrameHeader.maskingKey toData:data];
+	if(self.incomingFrameHeader.masked)
+		data = [[self class] dataByApplyingMask:self.incomingFrameHeader.maskingKey toData:data];
 	
-	if(incomingFrameHeader.opcode == TFWebSocketOpcodeClose) {
+	if(self.incomingFrameHeader.opcode == TFWebSocketOpcodeClose) {
 		[self peerClosedWithPayload:data];
 		return;
-	}else if(incomingFrameHeader.opcode == TFWebSocketOpcodePing) {
+	}else if(self.incomingFrameHeader.opcode == TFWebSocketOpcodePing) {
 		[self pongWithPayload:data];
 		return;
-	}else if(incomingFrameHeader.opcode == TFWebSocketOpcodePong) {
-		if(pongHandler) pongHandler();
+	}else if(self.incomingFrameHeader.opcode == TFWebSocketOpcodePong) {
+		if(self.pongHandler) self.pongHandler();
 		return;
 	}
 	
 	
 	if(data) {
-		[bufferedPayloadData appendData:data];
-		if([bufferedPayloadData length] > TFWebSocketMaxMessageBodySize) {
+		[self.bufferedPayloadData appendData:data];
+		if([self.bufferedPayloadData length] > TFWebSocketMaxMessageBodySize) {
 			[self closeAndNotifyForCode:TFWebSocketCloseCodeProtocolError];
 			return;
 		}
 	}
 	
-	if(incomingFrameHeader.opcode != TFWebSocketOpcodeContinuation)
-		messageType = incomingFrameHeader.opcode;
+	if(self.incomingFrameHeader.opcode != TFWebSocketOpcodeContinuation)
+		self.messageType = self.incomingFrameHeader.opcode;
 	
-	if(incomingFrameHeader.FIN) {
-		NSData *messageData = [bufferedPayloadData copy];
-		[bufferedPayloadData setLength:0];
+	if(self.incomingFrameHeader.FIN) {
+		NSData *messageData = [self.bufferedPayloadData copy];
+		[self.bufferedPayloadData setLength:0];
 		
-		if(messageType == TFWebSocketOpcodeText) {
+		if(self.messageType == TFWebSocketOpcodeText) {
 			NSString *text = [[NSString alloc] initWithData:messageData encoding:NSUTF8StringEncoding];
 			if(!text) { // Invalid UTF-8. Explicitly undefined in 08/09. Failing according to 10 [8.1]
 				[self fail];
 				return;
 			}
-			if(textMessageHandler) textMessageHandler(text);
+			if(self.textMessageHandler) self.textMessageHandler(text);
 			
-		}else if(messageType == TFWebSocketOpcodeBinary) {
-			if(dataMessageHandler) dataMessageHandler(messageData);
+		}else if(self.messageType == TFWebSocketOpcodeBinary) {
+			if(self.dataMessageHandler) self.dataMessageHandler(messageData);
 		}
 	}
 }
@@ -351,7 +354,7 @@ enum TFWebSocketConnectionV08ReadTags {
 
 
 - (void)sendDataMessage:(NSData*)data {
-	if(closing) return;
+	if(self.closing) return;
 	
 	TFWebSocketFrameHeader header = {
 		.FIN = YES,
@@ -362,13 +365,13 @@ enum TFWebSocketConnectionV08ReadTags {
 	};
 	
 	NSData *headerData = [self dataFromFrameHeader:header];
-	[socket writeData:headerData withTimeout:-1 tag:0];
-	[socket writeData:data withTimeout:-1 tag:0];
+	[self.socket writeData:headerData withTimeout:-1 tag:0];
+	[self.socket writeData:data withTimeout:-1 tag:0];
 }
 
 
 - (void)sendTextMessage:(NSString*)text {
-	if(closing) return;
+	if(self.closing) return;
 	
 	NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding];
 	
@@ -381,8 +384,8 @@ enum TFWebSocketConnectionV08ReadTags {
 	};
 	
 	NSData *headerData = [self dataFromFrameHeader:header];
-	[socket writeData:headerData withTimeout:-1 tag:0];
-	[socket writeData:data withTimeout:-1 tag:0];
+	[self.socket writeData:headerData withTimeout:-1 tag:0];
+	[self.socket writeData:data withTimeout:-1 tag:0];
 }
 
 
@@ -397,7 +400,7 @@ enum TFWebSocketConnectionV08ReadTags {
 	};
 	
 	NSData *headerData = [self dataFromFrameHeader:header];
-	[socket writeData:headerData withTimeout:-1 tag:0];
+	[self.socket writeData:headerData withTimeout:-1 tag:0];
 }
 
 
@@ -411,9 +414,9 @@ enum TFWebSocketConnectionV08ReadTags {
 	};
 	
 	NSData *headerData = [self dataFromFrameHeader:header];
-	[socket writeData:headerData withTimeout:-1 tag:0];
+	[self.socket writeData:headerData withTimeout:-1 tag:0];
 	if([payload length])
-		[socket writeData:payload withTimeout:-1 tag:0];
+		[self.socket writeData:payload withTimeout:-1 tag:0];
 }
 
 

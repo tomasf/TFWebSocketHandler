@@ -10,17 +10,9 @@
 #import "TFWebSocketConnection.h"
 
 
-@interface TFWebSocketHandler : WARequestHandler {
-	NSString *path;
-	NSSet *subprotocols;
-	
-	BOOL(^originHandler)(NSString *originString); // Optional. Validates origin. originString is nil when there's no origin header
-	void(^connectionHandler)(TFWebSocketConnection *connection);
-}
-
+@interface TFWebSocketHandler : WARequestHandler
 - (id)initWithPath:(NSString*)requestPath subprotocols:(NSSet*)subprotocolNames;
 
 @property(copy) BOOL(^originHandler)(NSString *originString);
 @property(copy) void(^connectionHandler)(TFWebSocketConnection *connection);
-
 @end

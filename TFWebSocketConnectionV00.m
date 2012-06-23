@@ -8,6 +8,7 @@
 
 #import "TFWebSocketConnectionV00.h"
 #import "TFWebSocketPrivate.h"
+#import "GCDAsyncSocket.h"
 
 
 @interface TFWebSocketConnectionV00 ()
@@ -26,12 +27,18 @@ enum TFWebSocketConnectionV00ReadTags {
 };
 
 
+@interface TFWebSocketConnectionV00 () <GCDAsyncSocketDelegate>
+@property BOOL closing;
+@end
+
+
 
 @implementation TFWebSocketConnectionV00
+@synthesize closing=_closing;
 
 
 - (NSString*)origin {
-	return [request valueForHeaderField:@"Origin"];
+	return [self.request valueForHeaderField:@"Origin"];
 }
 
 
@@ -40,8 +47,8 @@ enum TFWebSocketConnectionV00ReadTags {
 
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
-	if(!closing && closeHandler)
-		closeHandler(TFWebSocketCloseCodeUnspecified, nil);
+	if(!self.closing && self.closeHandler)
+		self.closeHandler(TFWebSocketCloseCodeUnspecified, nil);
 }
 
 
@@ -50,21 +57,24 @@ enum TFWebSocketConnectionV00ReadTags {
 		[self handshakeWithChallenge:data];
 		
 	}else if(tag == TFWebSocketTagFrameFirstByte) {
-		uint8_t byte = ((uint8_t*)[data bytes])[0];
+		uint8_t byte = *((uint8_t*)[data bytes]);
+		
 		if(byte == 0x00) { // Text
-			[socket readDataToData:[NSData dataWithBytes:"\xFF" length:1] withTimeout:-1 maxLength:TFWebSocketMaxMessageBodySize tag:TFWebSocketTagFramePayload];
+			[self.socket readDataToData:[NSData dataWithBytes:"\xFF" length:1] withTimeout:-1 maxLength:TFWebSocketMaxMessageBodySize tag:TFWebSocketTagFramePayload];
+			
 		}else if(byte == 0xFF) { // Close
 			[self processClosingFrame];
-			[socket readDataToLength:1 withTimeout:10 tag:TFWebSocketTagDiscard]; // skip 0x00
+			[self.socket readDataToLength:1 withTimeout:10 tag:TFWebSocketTagDiscard]; // skip 0x00
+		}else{
+			NSLog(@"Got unexpected initial message byte: 0x%X", byte);
 		}
-		[self readNewFrame];
 		
 	}else if(tag == TFWebSocketTagFramePayload) {
 		NSString *text = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(0, [data length]-1)] encoding:NSUTF8StringEncoding];
 		if(!text) return; // Violates spec.
 		
 		[self readNewFrame];
-		if(textMessageHandler) textMessageHandler(text);
+		if(self.textMessageHandler) self.textMessageHandler(text);
 	}
 }
 
@@ -82,14 +92,14 @@ enum TFWebSocketConnectionV00ReadTags {
 
 
 - (NSArray*)clientSubprotocols {
-	NSString *protocol = [request valueForHeaderField:@"Sec-WebSocket-Protocol"];
+	NSString *protocol = [self.request valueForHeaderField:@"Sec-WebSocket-Protocol"];
 	return protocol ? [NSArray arrayWithObject:protocol] : nil;
 }
 
 
 - (void)startWithAvailableSubprotocols:(NSSet*)serverProtocols {
 	[super startWithAvailableSubprotocols:serverProtocols];
-	[socket readDataToLength:8 withTimeout:10 tag:TFWebSocketTagChallenge];
+	[self.socket readDataToLength:8 withTimeout:10 tag:TFWebSocketTagChallenge];
 }
 
 
@@ -115,8 +125,8 @@ enum TFWebSocketConnectionV00ReadTags {
 
 
 - (void)handshakeWithChallenge:(NSData*)data {
-	NSData *key1 = [self dataFromKeyFieldValue:[request valueForHeaderField:@"Sec-Websocket-Key1"]];
-	NSData *key2 = [self dataFromKeyFieldValue:[request valueForHeaderField:@"Sec-Websocket-Key2"]];
+	NSData *key1 = [self dataFromKeyFieldValue:[self.request valueForHeaderField:@"Sec-Websocket-Key1"]];
+	NSData *key2 = [self dataFromKeyFieldValue:[self.request valueForHeaderField:@"Sec-Websocket-Key2"]];
 	if(!key1 || !key2) { // wtf?
 		[self closeForError];
 		return;
@@ -128,42 +138,45 @@ enum TFWebSocketConnectionV00ReadTags {
 	NSData *hash = [buffer MD5Digest];
 	
 	NSString *scheme = @"ws"; // Fix: wss if SSL. Needs support from WAK
-	NSString *location = [NSString stringWithFormat:@"%@://%@%@", scheme, request.host, request.path];
+	NSString *location = [NSString stringWithFormat:@"%@://%@%@", scheme, self.request.host, self.request.path];
+	if(self.request.query) location = [location stringByAppendingFormat:@"?%@", self.request.query];
 	
-	WAResponse *handshakeResponse = [[WAResponse alloc] initWithRequest:request socket:socket completionHandler:^(BOOL keepAlive) {}];
+	WAResponse *handshakeResponse = [[WAResponse alloc] initWithRequest:self.request socket:self.socket];
+	handshakeResponse.completionHandler = ^(BOOL close){};
 	handshakeResponse.statusCode = 101;
 	if(self.origin) [handshakeResponse setValue:self.origin forHeaderField:@"Sec-WebSocket-Origin"];
 	[handshakeResponse setValue:location forHeaderField:@"Sec-WebSocket-Location"];
 	[handshakeResponse setValue:@"WebSocket" forHeaderField:@"Upgrade"];
 	[handshakeResponse setValue:@"Upgrade" forHeaderField:@"Connection"];
-	[handshakeResponse setValue:self.subprotocol forHeaderField:@"Sec-WebSocket-Protocol"];
+	if(self.subprotocol) [handshakeResponse setValue:self.subprotocol forHeaderField:@"Sec-WebSocket-Protocol"];
 	[handshakeResponse setValue:nil forHeaderField:@"Content-Type"];
 	[handshakeResponse appendBodyData:hash];
 	[handshakeResponse finish];
 	
 	[self readNewFrame];
+	if(self.handshakeHandler) self.handshakeHandler(YES);
 }
 
 
 - (void)closeWithCode:(TFWebSocketCloseCode)code reason:(NSString*)reason {
-	NSData *closeFrame = [NSData dataWithBytes:"\x00\xFF" length:2];
-	[socket writeData:closeFrame withTimeout:-1 tag:0];
-	[socket disconnectAfterWriting];
+	NSData *closeFrame = [NSData dataWithBytes:"\xFF\x00" length:2];
+	[self.socket writeData:closeFrame withTimeout:-1 tag:0];
+	[self.socket disconnectAfterWriting];
 }
 
 
 - (void)closeForError {
-	[socket disconnect];
-	if(closeHandler) closeHandler(TFWebSocketCloseCodeUnspecified, nil);
+	[self.socket disconnect];
+	if(self.closeHandler) self.closeHandler(TFWebSocketCloseCodeUnspecified, nil);
 }
 
 
 - (void)processClosingFrame {
-	if(closing) {
-		[socket disconnect];
+	if(self.closing) {
+		[self.socket disconnect];
 	}else{
 		[self close];
-		if(closeHandler) closeHandler(TFWebSocketCloseCodeUnspecified, nil);
+		if(self.closeHandler) self.closeHandler(TFWebSocketCloseCodeUnspecified, nil);
 	}
 }
 
@@ -173,14 +186,15 @@ enum TFWebSocketConnectionV00ReadTags {
 
 
 - (void)readNewFrame {
-	[socket readDataToLength:1 withTimeout:-1 tag:TFWebSocketTagFrameFirstByte];
+	[self.socket readDataToLength:1 withTimeout:-1 tag:TFWebSocketTagFrameFirstByte];
 }
 
 
 - (void)sendTextMessage:(NSString*)text {
-	[socket writeData:[NSData dataWithBytes:"\x00" length:1] withTimeout:-1 tag:0];
-	[socket writeData:[text dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
-	[socket writeData:[NSData dataWithBytes:"\xFF" length:1] withTimeout:-1 tag:0];
+	NSParameterAssert(text);
+	[self.socket writeData:[NSData dataWithBytes:"\x00" length:1] withTimeout:-1 tag:0];
+	[self.socket writeData:[text dataUsingEncoding:NSUTF8StringEncoding] withTimeout:-1 tag:0];
+	[self.socket writeData:[NSData dataWithBytes:"\xFF" length:1] withTimeout:-1 tag:0];
 }
 
 
